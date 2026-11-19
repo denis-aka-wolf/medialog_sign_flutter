@@ -1,6 +1,6 @@
 # Medialog Sign database scripts
 
-SQL Server scripts for the application-owned MSIGN schema. They do not modify native Medialog tables.
+SQL Server 2008+ scripts for the application-owned MSIGN schema. JSON payload columns are stored as NVARCHAR(MAX); validate JSON in the application because ISJSON is unavailable on older SQL Server versions. They do not modify native Medialog tables.
 
 ## Deployment order
 
@@ -9,7 +9,7 @@ SQL Server scripts for the application-owned MSIGN schema. They do not modify na
 3. Optionally execute 002_security.sql, create a dedicated SQL login/user, and add it to MSIGN_AppRole.
 4. Verify object creation and test with a least-privilege application account.
 
-The scripts are idempotent for initial installation: existing tables are not altered. For later changes, add versioned migration scripts rather than editing a migration already deployed.
+The schema script intentionally avoids ISJSON for compatibility with older SQL Server versions. The scripts are idempotent for initial installation: existing tables are not altered. For later changes, add versioned migration scripts rather than editing a migration already deployed.
 
 ## Tables
 
