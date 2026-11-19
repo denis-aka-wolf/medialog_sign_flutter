@@ -1,5 +1,5 @@
 /*
- Medialog Sign SQL Server schema. Target SQL Server 2016+.
+ Medialog Sign SQL Server schema. Target SQL Server 2008+ (JSON payloads are stored as text; JSON validation is performed by the application).
  Creates application-owned objects in MSIGN. Does not modify native Medialog tables.
  Existing objects are not altered. Use versioned migrations for later changes.
 */
@@ -140,7 +140,6 @@ BEGIN
   VerifiedAt DATETIME2(3) NOT NULL CONSTRAINT DF_MSIGN_Verifications_Time DEFAULT(SYSUTCDATETIME()),
   CONSTRAINT FK_MSIGN_Verifications_Signature FOREIGN KEY(SignatureId) REFERENCES MSIGN.Signatures(SignatureId),
   CONSTRAINT FK_MSIGN_Verifications_User FOREIGN KEY(VerifiedByUserId) REFERENCES MSIGN.Users(UserId),
-  CONSTRAINT CK_MSIGN_Verifications_Json CHECK(VerificationDetailsJson IS NULL OR ISJSON(VerificationDetailsJson)=1)
  );
  CREATE INDEX IX_MSIGN_Verifications_Signature ON MSIGN.SignatureVerifications(SignatureId,VerifiedAt DESC);
 END;
@@ -163,8 +162,6 @@ BEGIN
   CONSTRAINT FK_MSIGN_Netrika_User FOREIGN KEY(CreatedByUserId) REFERENCES MSIGN.Users(UserId),
   CONSTRAINT CK_MSIGN_Netrika_Status CHECK(TaskStatus IN(N'draft',N'prepared',N'sending',N'sent',N'awaiting-signature',N'partially-signed',N'completed',N'rejected',N'cancelled',N'error')),
   CONSTRAINT CK_MSIGN_Netrika_Attempts CHECK(AttemptCount>=0),
-  CONSTRAINT CK_MSIGN_Netrika_RequestJson CHECK(RequestPayloadJson IS NULL OR ISJSON(RequestPayloadJson)=1),
-  CONSTRAINT CK_MSIGN_Netrika_ResponseJson CHECK(LastResponseJson IS NULL OR ISJSON(LastResponseJson)=1)
  );
  CREATE UNIQUE INDEX UX_MSIGN_Netrika_Idempotency ON MSIGN.NetrikaTasks(IdempotencyKey) WHERE IdempotencyKey IS NOT NULL;
  CREATE INDEX IX_MSIGN_Netrika_Patient ON MSIGN.NetrikaTasks(PatientId,CreatedAt DESC);
@@ -201,7 +198,6 @@ BEGIN
   CONSTRAINT UQ_MSIGN_Audit_Event UNIQUE(EventId),
   CONSTRAINT FK_MSIGN_Audit_User FOREIGN KEY(UserId) REFERENCES MSIGN.Users(UserId),
   CONSTRAINT CK_MSIGN_Audit_Outcome CHECK(Outcome IN(N'success',N'failure',N'denied',N'info')),
-  CONSTRAINT CK_MSIGN_Audit_Json CHECK(DetailsJson IS NULL OR ISJSON(DetailsJson)=1)
  );
  CREATE INDEX IX_MSIGN_Audit_Time ON MSIGN.AuditLog(OccurredAt DESC);
  CREATE INDEX IX_MSIGN_Audit_User ON MSIGN.AuditLog(UserId,OccurredAt DESC);
@@ -223,4 +219,9 @@ BEGIN
  );
 END;
 GO
-PRINT N'MSIGN schema deployment completed.';
+IF OBJECT_ID(N'MSIGN.Users',N'U') IS NULL OR OBJECT_ID(N'MSIGN.Certificates',N'U') IS NULL OR OBJECT_ID(N'MSIGN.UserCertificates',N'U') IS NULL OR OBJECT_ID(N'MSIGN.Documents',N'U') IS NULL OR OBJECT_ID(N'MSIGN.SigningOperations',N'U') IS NULL OR OBJECT_ID(N'MSIGN.Signatures',N'U') IS NULL OR OBJECT_ID(N'MSIGN.SignatureVerifications',N'U') IS NULL OR OBJECT_ID(N'MSIGN.NetrikaTasks',N'U') IS NULL OR OBJECT_ID(N'MSIGN.NetrikaTaskDocuments',N'U') IS NULL OR OBJECT_ID(N'MSIGN.AuditLog',N'U') IS NULL OR OBJECT_ID(N'MSIGN.IntegrationSettings',N'U') IS NULL
+BEGIN
+ RAISERROR(N'MSIGN schema deployment FAILED: one or more required tables are missing. Review errors above and rerun after correction.',16,1);
+END
+ELSE
+ PRINT N'MSIGN schema deployment completed successfully. All 11 tables exist.';
