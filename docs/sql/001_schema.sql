@@ -139,7 +139,7 @@ BEGIN
   VerificationDetailsJson NVARCHAR(MAX) NULL,
   VerifiedAt DATETIME2(3) NOT NULL CONSTRAINT DF_MSIGN_Verifications_Time DEFAULT(SYSUTCDATETIME()),
   CONSTRAINT FK_MSIGN_Verifications_Signature FOREIGN KEY(SignatureId) REFERENCES MSIGN.Signatures(SignatureId),
-  CONSTRAINT FK_MSIGN_Verifications_User FOREIGN KEY(VerifiedByUserId) REFERENCES MSIGN.Users(UserId),
+  CONSTRAINT FK_MSIGN_Verifications_User FOREIGN KEY(VerifiedByUserId) REFERENCES MSIGN.Users(UserId)
  );
  CREATE INDEX IX_MSIGN_Verifications_Signature ON MSIGN.SignatureVerifications(SignatureId,VerifiedAt DESC);
 END;
@@ -161,7 +161,7 @@ BEGIN
   CONSTRAINT UQ_MSIGN_Netrika_Public UNIQUE(TaskPublicId),
   CONSTRAINT FK_MSIGN_Netrika_User FOREIGN KEY(CreatedByUserId) REFERENCES MSIGN.Users(UserId),
   CONSTRAINT CK_MSIGN_Netrika_Status CHECK(TaskStatus IN(N'draft',N'prepared',N'sending',N'sent',N'awaiting-signature',N'partially-signed',N'completed',N'rejected',N'cancelled',N'error')),
-  CONSTRAINT CK_MSIGN_Netrika_Attempts CHECK(AttemptCount>=0),
+  CONSTRAINT CK_MSIGN_Netrika_Attempts CHECK(AttemptCount>=0)
  );
  CREATE UNIQUE INDEX UX_MSIGN_Netrika_Idempotency ON MSIGN.NetrikaTasks(IdempotencyKey) WHERE IdempotencyKey IS NOT NULL;
  CREATE INDEX IX_MSIGN_Netrika_Patient ON MSIGN.NetrikaTasks(PatientId,CreatedAt DESC);
@@ -197,7 +197,7 @@ BEGIN
   OccurredAt DATETIME2(3) NOT NULL CONSTRAINT DF_MSIGN_Audit_Time DEFAULT(SYSUTCDATETIME()),
   CONSTRAINT UQ_MSIGN_Audit_Event UNIQUE(EventId),
   CONSTRAINT FK_MSIGN_Audit_User FOREIGN KEY(UserId) REFERENCES MSIGN.Users(UserId),
-  CONSTRAINT CK_MSIGN_Audit_Outcome CHECK(Outcome IN(N'success',N'failure',N'denied',N'info')),
+  CONSTRAINT CK_MSIGN_Audit_Outcome CHECK(Outcome IN(N'success',N'failure',N'denied',N'info'))
  );
  CREATE INDEX IX_MSIGN_Audit_Time ON MSIGN.AuditLog(OccurredAt DESC);
  CREATE INDEX IX_MSIGN_Audit_User ON MSIGN.AuditLog(UserId,OccurredAt DESC);
